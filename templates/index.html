@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LightGBM Model and EDA</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h2>Upload Dataset</h2>
+            <form action="/" method="POST" enctype="multipart/form-data" id="upload-form">
+                <label>Select File Format:</label><br>
+                <select name="format" required>
+                    <option value="csv">CSV</option>
+                    <option value="excel">Excel</option>
+                    <option value="tsv">TSV</option>
+                </select>
+                
+                <div class="upload-area" id="upload-area">
+                    <p>Drag and drop file here or</p>
+                    <p>Limit 16MB per file: CSV, TSV, XLSX</p>
+                    
+                    <input type="file" name="file" id="file-input" style="display: none;" required>
+                    <button type="button" id="browse-button">Browse</button>
+                </div>
+                <p id="filename">{{ filename }}</p>
+                <button type="submit" class="submit-btn">Upload</button>
+            </form>
+            <br>
+
+            <!-- Data Preprocessing Section -->
+            <h2>Data Preprocessing</h2>
+            <form action="/" method="POST">
+                <input type="hidden" name="action" value="Handle Missing Values">
+                <label for="fill_method">Select Method for Missing Values:</label><br>
+                <select name="fill_method" required>
+                    <option value="Mean">Mean</option>
+                    <option value="Median">Median</option>
+                    <option value="Mode">Mode</option>
+                    <option value="Drop">Drop</option>
+                </select><br>
+                <button type="submit" class="submit-btn">Apply</button>
+            </form>
+            <br>
+            <form action="/" method="POST">
+                <input type="hidden" name="action" value="Normalize Data">
+                <button type="submit" class="submit-btn">Normalize Data</button>
+            </form>
+            {% if missing_values_report %}
+                <div class="alert alert-success">{{ missing_values_report }}</div>
+            {% endif %}
+            <br><br>
+
+            <!-- Data Visualization Section -->
+            <h2>Data Visualization</h2>
+            <form action="/" method="POST">
+                <input type="hidden" name="action" value="Generate Plot">
+                <label for="plot_type">Select Plot Type:</label><br>
+                <select name="plot_type" required>
+                    <option value="scatter">Scatter Plot</option>
+                    <option value="line">Line Plot</option>
+                    <option value="bar">Bar Plot</option>
+                    <option value="hist">Histogram (X-axis only)</option>
+                </select><br>
+                <label for="x_axis">Select X Axis:</label><br>
+                <select name="x_axis" required>
+                    {% for column in columns %}
+                        <option value="{{ column }}">{{ column }}</option>
+                    {% endfor %}
+                </select><br>
+                <label for="y_axis">Select Y Axis:</label><br>
+                <select name="y_axis" required>
+                    {% for column in columns %}
+                        <option value="{{ column }}">{{ column }}</option>
+                    {% endfor %}
+                </select><br>
+                <button type="submit" class="submit-btn">Generate Plot</button>
+            </form>
+            <br><br>
+
+            <!-- Exploratory Data Analysis Section -->
+            <h2>Exploratory Data Analysis</h2>
+            <form method="post">
+                <input type="hidden" name="action" value="Show Summary Statistics">
+                <h3>Show Summary Statistics:</h3>
+                <p>Select columns:</p>
+                {% for column in columns %}
+                    <input type="checkbox" name="selected_columns" value="{{ column }}">{{ column }}<br>
+                {% endfor %}
+                <button type="submit" class="submit-btn">Show Summary Statistics</button>
+            </form>
+            <form method="post">
+                <input type="hidden" name="action" value="Show Distribution Plots">
+                <h3>Show Distribution Plots:</h3>
+                <p>Select columns:</p>
+                {% for column in columns %}
+                    <input type="checkbox" name="selected_columns" value="{{ column }}">{{ column }}<br>
+                {% endfor %}
+                <button type="submit" class="submit-btn">Show Distribution Plots</button>
+            </form>
+            <br><br>
+
+            <!-- Model Training Section -->
+            <h2>Model Training and Evaluation</h2>
+            <form action="/" method="POST">
+                <input type="hidden" name="action" value="Train Model">
+                <label for="target">Select Target Column:</label><br>
+                <select name="target" required>
+                    {% for column in columns %}
+                        <option value="{{ column }}">{{ column }}</option>
+                    {% endfor %}
+                </select><br>
+                <label for="learning_rate">Learning Rate</label>
+                <input type="number" name="learning_rate" value="0.1" step="0.01" min="0.01" max="1.0"><br>
+                <label for="optimization_method">Optimization Method:</label><br>
+                <select name="optimization_method" required>
+                    <option value="none">None</option>
+                    <option value="grid_search">Grid Search</option>
+                    <option value="random_search">Random Search</option>
+                </select><br>
+                <button type="submit" class="submit-btn">Train Model</button>
+            </form>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <h2>Uploaded File: {{ filename }}</h2>
+            
+            <!-- Display the head of the dataset -->
+            {% if data_head %}
+                <h3>Dataset Preview</h3>
+                <div class="data-preview">
+                    {{ data_head|safe }}
+                </div>
+            {% endif %}
+            
+            {% if summary_statistics %}
+                <h3>Summary Statistics</h3>
+                <div class="data-preview">
+                    {{ summary_statistics | safe }}
+                </div>
+            {% endif %}
+
+            {% if eda_plots %}
+                <h3>Distribution Plots</h3>
+                {% for col, url in eda_plots %}
+                    <h4>Distribution of {{ col }}</h4>
+                    <img src="data:image/png;base64,{{ url }}" alt="Distribution Plot">
+                {% endfor %}
+            {% endif %}
+
+            {% if report %}
+                <h3>Classification Report</h3>
+                <pre>{{ report }}</pre>
+            {% endif %}
+            {% if plot_url %}
+                <h3>Generated Plot</h3>
+                <img src="data:image/png;base64,{{ plot_url }}" alt="Generated Plot">
+            {% endif %}
+            {% if accuracy is not none %}
+                <h3>Model Evaluation</h3>
+                <p>Accuracy: {{ accuracy }}</p>
+                <p>Precision: {{ precision }}</p>
+                <p>Recall: {{ recall }}</p>
+            {% endif %}
+        </div>
+    </div>
+    <script>
+        document.getElementById('browse-button').addEventListener('click', function() {
+            document.getElementById('file-input').click();
+        });
+
+        document.getElementById('file-input').addEventListener('change', function() {
+            var filename = this.value.split('\\').pop();  // For Windows
+            filename = filename || this.value.split('/').pop(); // For Unix-based systems
+            document.getElementById('filename').textContent = filename ? filename : 'No file selected';
+        });
+    </script>
+</body>
+</html>

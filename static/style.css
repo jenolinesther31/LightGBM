@@ -1,0 +1,137 @@
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    background: linear-gradient(to right, #1f1c2c, #928DAB);
+    color: white;
+}
+
+.container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+.sidebar {
+    width: 25%;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 15px;
+    height: 100vh;
+    overflow-y: auto;
+    border-right: 2px solid #f3aab8;
+    transition: background-color 0.3s;
+}
+
+.sidebar:hover {
+    background-color: rgba(0, 0, 0, 0.9);
+}
+
+.sidebar h2 {
+    margin-top: 0;
+    color: #f77690; /* Color for headings */
+}
+
+.main-content {
+    width: 75%;
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border-left: 2px solid #f77690;
+}
+
+h1 {
+    color: #f77690;
+    text-align: center;
+    font-size: 2em;
+}
+
+h2 {
+    color: #f77690;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    color: #ddd;
+    margin-top: 10px;
+}
+
+select {
+    height: 35px;
+    border-radius: 10px;
+    background-color: rgba(0, 0, 0, 0.412);
+    color: rgb(255, 255, 255);
+    border: 2px solid #f77690;
+    padding: 5px;
+}
+
+select:hover {
+    border-color: #f77690;
+}
+
+button {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #f4c997a0;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #f4c997a0;
+}
+
+.upload-area {
+    border: 2px dashed #f4c997a0;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    margin-top: 15px;
+    cursor: pointer;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.upload-area.drag-over {
+    border-color: #f4c997a0;
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+}
+
+.checkbox-container input[type="checkbox"] {
+    margin-right: 5px; /* Adjust space as needed */
+}
+
+span {
+    color: white;
+}
+
+#filename {
+    font-weight: bold;
+    color: #ddd;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    margin-top: 15px;
+    border: 2px solid #f4c997a0;
+    border-radius: 10px;
+}
+
+input[type="range"] {
+    width: 80%;
+    margin-right: 10px;
+    accent-color: #f4c997a0; /* This is a modern property for styling range input */
+}
