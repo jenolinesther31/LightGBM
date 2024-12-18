@@ -165,6 +165,22 @@
                 <p>Precision: {{ precision }}</p>
                 <p>Recall: {{ recall }}</p>
             {% endif %}
+
+            {% if confusion_matrix_url %}
+                <h3>Confusion Matrix</h3>
+                <img src="data:image/png;base64,{{ confusion_matrix_url }}" alt="Confusion Matrix">
+            {% endif %}
+
+            {% if auc_roc_url %}
+                <h3>AUC-ROC Curve</h3>
+                <img src="data:image/png;base64,{{ auc_roc_url }}" alt="AUC-ROC Curve">
+            {% endif %}
+
+            {% if statistical_inferences %}
+                <h3>Statistical Inferences</h3>
+                <p>{{ statistical_inferences }}</p>
+            {% endif %}
+
         </div>
     </div>
     <script>

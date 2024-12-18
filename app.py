@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, flash, session
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, GridSearchCV, RandomizedSearchCV
-from sklearn.metrics import accuracy_score, precision_score, recall_score, classification_report
+from sklearn.metrics import (accuracy_score, precision_score, recall_score, classification_report, confusion_matrix, roc_curve, auc)
 from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 from sklearn.impute import SimpleImputer
 from imblearn.over_sampling import SMOTE
@@ -32,11 +32,13 @@ def encode_categorical_columns(df):
 def main():
     global df, model
     accuracy, precision, recall, report, plot_url = None, None, None, None, None
+    confusion_matrix_url, auc_roc_url = None, None
     columns = []
     data_head = None
     missing_values_report = None
     summary_statistics = None
     eda_plots = []
+    statistical_inferences = None
 
     if request.method == "POST":
         if "file" in request.files:
@@ -192,13 +194,65 @@ def main():
                 recall = recall_score(y_test, y_pred, average="weighted", zero_division=0)
                 report = classification_report(y_test, y_pred)
 
+                # Confusion Matrix Plot
+                conf_matrix = confusion_matrix(y_test, y_pred)
+                plt.figure(figsize=(8, 6))
+                sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues')
+                plt.title('Confusion Matrix')
+                buf = io.BytesIO()
+                plt.savefig(buf, format="png")
+                buf.seek(0)
+                confusion_matrix_url = base64.b64encode(buf.getvalue()).decode("utf8")
+                buf.close()
+                plt.close()
+
+                # AUC-ROC Curve
+                y_prob = model.predict_proba(X_test)
+                if y_test.nunique() == 2:  # For binary classification
+                    fpr, tpr, _ = roc_curve(y_test, y_prob[:, 1])
+                    roc_auc = auc(fpr, tpr)
+                    plt.figure(figsize=(8, 6))
+                    plt.plot(fpr, tpr, label=f"AUC = {roc_auc:.2f}")
+                    plt.plot([0, 1], [0, 1], 'k--', label="Random Guess")
+                    plt.xlabel("False Positive Rate")
+                    plt.ylabel("True Positive Rate")
+                    plt.title("AUC-ROC Curve")
+                    plt.legend(loc="lower right")
+                    buf = io.BytesIO()
+                    plt.savefig(buf, format="png")
+                    buf.seek(0)
+                    auc_roc_url = base64.b64encode(buf.getvalue()).decode("utf8")
+                    buf.close()
+                    plt.close()
+
             except Exception as e:
                 flash(f"Error during model training: {e}")
+
+        # Generate Statistical Inferences based on results
+        if accuracy or precision or recall:
+            statistical_inferences = f"""
+            The trained model achieved an accuracy of {accuracy:.2f}, 
+            a precision of {precision:.2f}, and a recall of {recall:.2f}.
+            This suggests the model performs well on this dataset, 
+            balancing between identifying true positives and avoiding false positives.
+            """
+
+        if summary_statistics:
+            statistical_inferences = (statistical_inferences or "") + """
+            The summary statistics indicate the central tendency and dispersion of the selected columns.
+            Consider features with high variability for further analysis or normalization.
+            """
+
+        if eda_plots:
+            statistical_inferences = (statistical_inferences or "") + """
+            Distribution plots highlight the data's spread and potential outliers.
+            Check for skewness or multimodal distributions that may require transformations.
+            """            
 
     columns = session.get('columns', [])
     filename = session.get('filename', 'No file chosen')
 
-    return render_template("index.html", columns=columns, filename=filename, accuracy=accuracy, precision=precision, recall=recall, report=report, plot_url=plot_url, data_head=data_head, missing_values_report=missing_values_report, summary_statistics=summary_statistics, eda_plots=eda_plots)
+    return render_template("index.html", columns=columns, filename=filename, accuracy=accuracy, precision=precision, recall=recall, report=report, plot_url=plot_url, data_head=data_head, missing_values_report=missing_values_report, summary_statistics=summary_statistics, eda_plots=eda_plots, confusion_matrix_url=confusion_matrix_url, auc_roc_url=auc_roc_url, statistical_inferences=statistical_inferences)
 
 if __name__ == "__main__":
     app.run(debug=True)
